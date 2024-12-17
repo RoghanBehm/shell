@@ -2,10 +2,34 @@
 #include <string.h>
 #include <stdlib.h>
 
+  struct commands {
+    char *echo;
+    char *exit;
+    char *type;
+  };
+
+  struct CmdMapping {
+    char *command;
+    char *typeval;
+  };
+
 int main() {
-  // Uncomment this block to pass the first stage
-  
+
+  struct commands type;
+  type.echo = "builtin";
+  type.exit = "builtin";
+  type.type = "builtin";
+
+  struct CmdMapping cmd_mapping[] = {
+    {"echo", type.echo},
+    {"exit", type.exit},
+    {"type", type.type}
+  }; 
+
+  int num_of_cmds = sizeof(cmd_mapping) / sizeof(cmd_mapping[0]);
+
   while (1) {
+    int found = 0;
     printf("$ ");
     fflush(stdout);
 
@@ -14,19 +38,41 @@ int main() {
     char input[100];
     fgets(input, 100, stdin);
     char result[150];
+    char arg_error_result[150];
     input[strlen(input)-1]='\0';
     snprintf(result, sizeof(result), "%s: command not found", input);
 
     if (strcmp(input, "exit 0") == 0) {
+      found = 1;
       exit(0);
     }
 
     if (strncmp(input, "echo", 4) == 0) {
+      found = 1;
       printf("%s\n", input + 5);
     }
 
-    else if (input) {
-      printf("%s\n", result); 
+    if (strncmp(input, "type", 4) == 0) {
+      char cmd[6];
+      strncpy(cmd, input + 5, sizeof(cmd) - 1);
+
+      for (int i = 0; i < num_of_cmds; i++) {
+        if (strcmp(cmd, cmd_mapping[i].command) == 0) {
+          if (strcmp(cmd_mapping[i].typeval, "builtin") == 0) {
+            printf("%s is a shell builtin\n", cmd);
+            found = 1;
+          }
+        }
+      }
+    }
+
+    if (found == 0) {
+      if (strncmp(input, "type", 4) == 0) {
+        snprintf(arg_error_result, sizeof(arg_error_result), "%s: not found", input);
+        printf("%s\n", arg_error_result + 5);
+      } else {
+        printf("%s\n", result); 
+      }
     }
   }
   
