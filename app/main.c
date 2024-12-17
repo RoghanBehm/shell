@@ -15,6 +15,11 @@ int main() {
     char result[150];
     input[strlen(input)-1]='\0';
     snprintf(result, sizeof(result), "%s: command not found", input);
+
+    if (strcmp(input, "exit 0") == 0) {
+      return 0;
+    }
+
     if (input) {
       printf("%s\n", result); 
     }
