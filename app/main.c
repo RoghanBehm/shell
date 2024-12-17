@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 int main() {
   // Uncomment this block to pass the first stage
@@ -17,10 +18,14 @@ int main() {
     snprintf(result, sizeof(result), "%s: command not found", input);
 
     if (strcmp(input, "exit 0") == 0) {
-      return 0;
+      exit(0);
     }
 
-    if (input) {
+    if (strncmp(input, "echo", 4) == 0) {
+      printf("%s\n", input + 5);
+    }
+
+    else if (input) {
       printf("%s\n", result); 
     }
   }
