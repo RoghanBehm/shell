@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define DEFAULT_PATH "/home/roghan/.nvm/versions/node/v23.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin"
+
 
   struct commands {
     char *echo;
@@ -18,12 +18,10 @@
 
 int main() {
 
-  int path_given = 0;
+
   char cmd_path[900];
   char *path = getenv("PATH");
-  if (strcmp(path, DEFAULT_PATH)) {
-    path_given = 1;
-  }
+
 
 
   struct commands type;
@@ -65,37 +63,47 @@ int main() {
     }
 
     if (strncmp(input, "type", 4) == 0) {
-      char cmd[6];
+      char cmd[100];
       strncpy(cmd, input + 5, sizeof(cmd) - 1);
 
-      if (path_given) {
+              // Need to try this before the access() block
+      for (int i = 0; i < num_of_cmds; i++) {
+        if (strcmp(cmd, cmd_mapping[i].command) == 0) {
+          if (strcmp(cmd_mapping[i].typeval, "builtin") == 0) {
+            printf("%s is a shell builtin\n", cmd);
+            found = 1;
+          }
+        }
+      }
+      if (!found) {
+        char path_copy[1024];
+        strncpy(path_copy, path, sizeof(path_copy) - 1);
+        path_copy[sizeof(path_copy) - 1] = '\0';
 
         char *split_path;
-        split_path = strtok(path, ":");
+        split_path = strtok(path_copy, ":");
         while (split_path != NULL) {
-          snprintf(result, sizeof(result), "%s: command not found", input);
-          snprintf(cmd_path, sizeof(cmd_path), "%s/%s", split_path, cmd);
-          if (access(cmd_path, X_OK) == 0) {
-            printf("%s is %s/%s\n", cmd, split_path, cmd);
-            accessed = 1;
+          snprintf(result, sizeof(result), "%s: command not found\n", input);
+          if (split_path[strlen(split_path) - 1] == '/') {
+              snprintf(cmd_path, sizeof(cmd_path), "%s%s", split_path, cmd);
+          } else {
+              snprintf(cmd_path, sizeof(cmd_path), "%s/%s", split_path, cmd);
+          }
+          if (access(cmd_path, F_OK) == 0) {
+            printf("%s is %s\n", cmd, cmd_path);
+            found = 1;
+            break;
+
           } 
           
-          if (!accessed) {
-            printf("%s: not found", cmd);
-          }
-          split_path = strtok(NULL, ",");
+          split_path = strtok(NULL, ":");
         }
-        found = 1;
-      } else {
-          for (int i = 0; i < num_of_cmds; i++) {
-            if (strcmp(cmd, cmd_mapping[i].command) == 0) {
-              if (strcmp(cmd_mapping[i].typeval, "builtin") == 0) {
-                printf("%s is a shell builtin\n", cmd);
-                found = 1;
-              }
-            }
-          }
       }
+
+
+        
+
+      
 
 
     }
@@ -109,6 +117,6 @@ int main() {
       }
     }
   }
-  
+
   return 0;
 }
